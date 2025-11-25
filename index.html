@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ampere EV Dealership - WhatsApp Inquiry</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 sm:p-8 flex items-center justify-center">
+
+    <div id="app" class="w-full max-w-lg bg-white shadow-2xl rounded-xl p-6 sm:p-10 border border-gray-100">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                <span>Sowndram Motors Ampere EV Inquiry</span>
+            </h1>
+            <p class="mt-2 text-gray-500 text-sm">Fill out the form below and we'll connect with you on WhatsApp immediately.</p>
+        </header>
+
+        <!-- Lead Capture Form -->
+        <form id="whatsapp-form" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                <input type="text" id="name" name="name" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                       placeholder="e.g., Raj">
+            </div>
+
+            <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">WhatsApp Phone Number (with Country Code)</label>
+                <input type="tel" id="phone" name="phone" required pattern="[0-9+ ]+"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                       placeholder="e.g., +91 98765 43210">
+                <p class="text-xs text-gray-400 mt-1">We will contact you directly on this number.</p>
+            </div>
+
+            <div>
+                <label for="query" class="block text-sm font-medium text-gray-700 mb-1">Your Inquiry / Model Interested In</label>
+                <textarea id="query" name="query" rows="4" required
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out"
+                          placeholder="e.g., I'm interested in the Magnus EX model and scheduling a test drive."></textarea>
+            </div>
+
+            <button type="submit" id="submit-button"
+                    class="w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out transform hover:scale-[1.01] disabled:bg-green-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                    <path d="M15 7v2a4 4 0 01-4 4H9.863L8 14.863V11H4a2 2 0 01-2-2V5a2 2 0 00-2-2 2 2 0 002 2z" />
+                </svg>
+                Send Inquiry via WhatsApp Cloud
+            </button>
+        </form>
+
+        <!-- Dynamic Message Box -->
+        <div id="message-box" class="mt-6 p-4 rounded-lg text-sm hidden transition-all duration-300"></div>
+
+        <!-- Hidden Section for Developer Context -->
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3">Developer Information (For Power Automate Setup)</h2>
+            <p class="text-sm text-gray-600">
+                The lead data is now saved to Firestore. To complete the WhatsApp integration, you must configure a secure backend (like **Power Automate**) to pull this data and call the actual WhatsApp Cloud API.
+            </p>
+            <p class="text-sm text-gray-600 mt-2">
+                The **API Call Payload** you should use in your Power Automate HTTP action looks like this (you'll use the data saved in Firestore):
+            </p>
+            <pre class="bg-gray-800 text-green-300 p-3 rounded-lg mt-2 text-xs overflow-x-auto">
+{
+  "messaging_product": "whatsapp",
+  "to": "[[Customer Phone Number from Firestore]]",
+  "type": "text",
+  "text": {
+    "body": "Hi [[Customer Name]], thanks for your inquiry about Ampere EVs! We received your message: '[[Customer Query]]'. A sales representative will contact you shortly."
+  }
+}
+            </pre>
+            <p class="text-xs text-gray-500 mt-2">
+                **Endpoint:** `https://graph.facebook.com/v19.0/[YOUR_PHONE_NUMBER_ID]/messages`
+                <br>
+                **Authorization:** `Bearer [YOUR_SECURE_API_TOKEN]` (This token must only be stored in Power Automate/backend.)
+            </p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, addDoc, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: Global variables from the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth, userId = null;
+        let isAuthReady = false;
+
+        const form = document.getElementById('whatsapp-form');
+        const submitButton = document.getElementById('submit-button');
+        const messageBox = document.getElementById('message-box');
+
+        // Utility to show messages
+        const showMessage = (text, isError = false) => {
+            messageBox.textContent = text;
+            messageBox.className = `mt-6 p-4 rounded-lg text-sm transition-all duration-300 ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            messageBox.classList.remove('hidden');
+        };
+
+        // 1. Initialize Firebase
+        try {
+            if (Object.keys(firebaseConfig).length > 0) {
+                setLogLevel('debug'); // Enable Firestore logging
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 2. Handle Authentication
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                    } else {
+                        // Sign in if no user is present
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (e) {
+                            console.error("Auth Error:", e);
+                            userId = crypto.randomUUID(); // Fallback ID
+                        }
+                    }
+                    isAuthReady = true;
+                });
+            } else {
+                 showMessage("Firebase configuration is missing. Leads will only be visible in the console.", true);
+                 isAuthReady = true;
+            }
+        } catch (e) {
+            console.error("Firebase Initialization Error:", e);
+            showMessage("Could not initialize Firebase. Check console for details.", true);
+            isAuthReady = true;
+        }
+
+        // 3. Handle Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) {
+                showMessage("Authentication is still initializing. Please wait a moment and try again.", true);
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+
+            const formData = new FormData(form);
+            const name = formData.get('name').trim();
+            const phone = formData.get('phone').trim();
+            const queryText = formData.get('query').trim();
+
+            const leadData = {
+                name: name,
+                phone: phone,
+                query: queryText,
+                timestamp: new Date().toISOString(),
+                status: 'New Lead',
+                source: 'WhatsApp Web Form',
+                capturedBy: userId || 'anonymous',
+                appId: appId
+            };
+
+            // Public Collection Path for Leads
+            const collectionPath = `/artifacts/${appId}/public/data/whatsapp_leads`;
+
+            try {
+                if (db) {
+                    const docRef = await addDoc(collection(db, collectionPath), leadData);
+                    showMessage(`Success! Your inquiry has been logged (ID: ${docRef.id}). We will message you on WhatsApp shortly.`);
+                    console.log("Lead successfully written to Firestore:", docRef.id, leadData);
+                    form.reset();
+
+                    // Optional: Open WhatsApp Web/App with pre-filled message for immediate customer contact
+                    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(`Thank you, ${name}, for your inquiry about the Ampere EV dealership. We have received your request and will contact you shortly!`)}`;
+                    // window.open(whatsappUrl, '_blank'); // Uncomment if you want an immediate WhatsApp link opening
+
+                } else {
+                    showMessage("Form submitted! (Data logged in console, Firebase not configured).", false);
+                    console.warn("Firebase not available. Lead Data:", leadData);
+                }
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showMessage(`Failed to save inquiry. Please try again. Error: ${e.message}`, true);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Inquiry via WhatsApp Cloud';
+            }
+        });
+    </script>
+</body>
+</html>
